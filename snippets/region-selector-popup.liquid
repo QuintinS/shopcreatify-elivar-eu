@@ -1,0 +1,188 @@
+<div id="region-selector-trigger" style="display:none"></div>
+{% if settings.enable_region_selector %}
+  {% include 'region-selector' %}
+{% endif %}
+
+
+{% if settings.enable_region_selector %}
+
+  <script>
+
+  var qCookie =  {
+    createCookie: function(name,value,days) {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime()+(days*24*60*60*1000));
+            var expires = "; expires="+date.toGMTString();
+        }
+        else var expires = "";
+        document.cookie = name+"="+value+expires+"; path=/";
+    },
+
+    readCookie: function(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    },
+
+    eraseCookie: function(name) {
+        qCookie.createCookie(name,"",-1);
+    }
+  }
+
+
+  getQueryStringVars = function () {
+    a = window.location.search.substr(1).split('&');
+    if (a === "") return {};
+    var b = {};
+    for (var i = 0; i < a.length; ++i) {
+      var p = a[i].split('=', 2);
+      if (p.length == 1)
+        b[p[0]] = "";
+      else
+        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+    }
+    return b;
+  };
+
+    var regionSelector = {
+
+      isDismissed: qCookie.readCookie("elivar-regionselector-dimissed") || false,
+      regionSelectorDelay: null,
+      regionSelectorSleepTime: null,
+
+      selectUK: function() {
+        console.log("selectUK");
+
+        // Set Cookie
+        $.cookie('elivar-regionselector-dimissed', regionSelector.regionSelectorSleepTime, { expires: regionSelector.regionSelectorSleepTime, path: '/' })
+
+        // Dismiss FancyBox
+        $.fancybox.close();
+
+      },
+
+      selectEU: function() {
+        console.log("selectEU");
+        // Redirect to EU Store
+        location.href = "eu.elivar.com" +  "?regionselector=EU";
+      },
+
+      fire: function() {
+
+        console.log("fire()");
+
+        {% if settings.region_content_delay != blank %}
+          regionSelector.regionSelectorDelay = Number({{settings.region_content_delay}} * 1000);
+        {% else %}
+          regionSelector.regionSelectorDelay = Number(5000);
+        {% endif %}
+
+        {% if settings.region_content_sleeptime != blank %}
+          regionSelector.regionSelectorSleepTime = Number({{settings.region_content_sleeptime}});
+        {% else %}
+          regionSelector.regionSelectorSleepTime = Number(0);
+        {% endif %}
+
+        if ( !$.cookie('elivar-regionselector-dimissed') ) {
+
+          setTimeout(function() {
+
+            console.log("Timer Finished");
+
+            $("#region-selector-trigger").fancybox({
+              'transitionIn'  : 'elastic',
+              'transitionOut' : 'elastic',
+              'speedIn'   : 600, 
+              'speedOut'    : 200, 
+              'overlayShow' : false,
+              'maxWidth': 800,
+              'content' : $(document.getElementById("region-selector-popup")).html()
+            });
+
+            $("#region-selector-trigger").click();
+
+            $.fancybox.update();
+
+            regionSelector.addEventListeners();
+
+          }, regionSelector.regionSelectorDelay);
+
+          $.fancybox.update();
+
+        }
+        else
+        {
+          console.log("Cookie is present");
+        }
+
+      },
+
+      processAction: function(dataID) {
+
+        var myDataID = dataID;
+
+        if (myDataID === "UK") {
+          regionSelector.selectUK();
+        }
+        else
+        if (myDataID === "EU") {
+          regionSelector.selectEU();
+        }
+
+      },
+
+      addEventListeners: function(){
+
+        console.log("addEventListeners");
+
+        $("[data-action='SelectRegion']").on("click", function(event){
+          var myID = $(event.currentTarget).attr("data-id");
+          console.log(myID);
+          regionSelector.processAction(myID);
+        });
+
+      },
+
+      reset: function() {
+
+        qCookie.eraseCookie("elivar-regionselector-dimissed");
+        regionSelector.fire();
+
+      },
+
+      load: function() {
+
+        
+
+        if ( getQueryStringVars().regionselector ) {
+          console.log("Query String");
+          var myRegion = getQueryStringVars().regionselector;
+          regionSelector.processAction(myRegion);
+          return;
+        }
+
+        if ( !$.cookie('elivar-regionselector-dimissed') ) {
+          console.log("No Cookie");
+          regionSelector.fire();
+        }
+        else
+        {
+          console.log("Cookie");
+        }
+      }
+
+    };
+
+    regionSelector.load();
+
+    
+
+  </script>
+
+{% endif %}

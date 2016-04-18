@@ -1,0 +1,8 @@
+.header-top-bar {
+	no-repeat center center;
+    width: 100%;
+    height: 7px;
+	position:absolute;
+	bottom:-7px;
+	background: url("https://cdn.shopify.com/s/files/1/1190/5012/t/2/assets/top-bar.png?2264503219164098979g") #fff;
+}
